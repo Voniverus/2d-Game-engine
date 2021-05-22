@@ -121,10 +121,7 @@ class Polygon:
 
             self.rigidBody.velocity = self.rigidBody.velocity - 1 * (np.dot(self.rigidBody.velocity, reactionVector)) * reactionVector
 
-            self.rigidBody.position += self.autoCollisionsDetails[i].reactionVectorObject1
-
-    def updatePosition(self, deltaTime):
-        self.rigidBody.position += self.rigidBody.velocity * deltaTime 
+            self.rigidBody.position += self.autoCollisionsDetails[i].reactionVectorObject1 
 
 
 class Circle:
@@ -197,10 +194,3 @@ class Circle:
                                             (other.rigidBody.mass * other.rigidBody.previousVelocity) + 
                                             (other.rigidBody.mass * 0.8 * (other.rigidBody.previousVelocity - self.rigidBody.previousVelocity))) / 
                                             (self.rigidBody.mass + other.rigidBody.mass))
-
-
-    def updatePosition(self, deltaTime):
-        if self.rigidBody.type == "dynamic":
-            self.rigidBody.previousVelocity = self.rigidBody.velocity
-
-        self.rigidBody.position += self.rigidBody.velocity * deltaTime 
