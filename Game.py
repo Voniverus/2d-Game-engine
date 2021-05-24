@@ -37,6 +37,13 @@ floor = Entities.StaticPoly("floor", np.array([[-150, -15], [150, -15], [150, 15
 Globals.gameObjects.append(floor)
 Globals.objects.append(floor)
 
+wallLeft = Entities.StaticPoly("wall left", np.array([[-15, -150], [0, -150], [30, 150], [-15, 150]]), np.array([-240.0, 200.0]), Colors.grey, Collider.Tag.BARRIER)
+Globals.gameObjects.append(wallLeft)
+Globals.objects.append(wallLeft)
+
+wallRight = Entities.StaticPoly("wall right", np.array([[-0, -150], [15, -150], [15, 150], [-30, 150]]), np.array([240.0, 200.0]), Colors.grey, Collider.Tag.BARRIER)
+Globals.gameObjects.append(wallRight)
+Globals.objects.append(wallRight)
 
 
 def draw():

@@ -142,15 +142,14 @@ class Player:
                 # Angle between velocity and surface
                 velocityFloorAngle = math.atan2(reactionVector[0] * self.rigidBody.velocity[1] - reactionVector[1] * self.rigidBody.velocity[0],
                               reactionVector[0] * self.rigidBody.velocity[0] + reactionVector[1] * self.rigidBody.velocity[1])
-
-                # Angle between floor and global down direction
-                floorToGlobalAngle = math.atan2(reactionVector[0] * 1 - reactionVector[1] * 0,
-                              reactionVector[0] * 0 + reactionVector[1] * 1)
-
+                              
 
                 # Checks if angle of velocity is between normal force vector angle +/- 90 degrees
-                if angle1 < math.atan2(self.rigidBody.velocity[1], self.rigidBody.velocity[0]) < angle2:
+                if (angle1 < math.atan2(self.rigidBody.velocity[1], self.rigidBody.velocity[0]) - 2 * math.pi < angle2 or
+                    angle1 < math.atan2(self.rigidBody.velocity[1], self.rigidBody.velocity[0])               < angle2 or
+                    angle1 < math.atan2(self.rigidBody.velocity[1], self.rigidBody.velocity[0]) + 2 * math.pi < angle2):
                     
+
                     # Checks which direction the perpendicular vector should be based on velocity direciton
                     if velocityFloorAngle > 0:
                         perpendicularVector = np.array([-self.collider.autoCollisionsDetails[i].reactionVectorObject2[1], self.collider.autoCollisionsDetails[i].reactionVectorObject2[0]])
@@ -161,12 +160,10 @@ class Player:
                     else:
                         break
 
-                    # Rotates acceleration for easier calculation
-                    accelrationRelativeToFloor = np.array([self.rigidBody.acceleration[0] * math.cos(floorToGlobalAngle) - self.rigidBody.acceleration[1] * math.sin(floorToGlobalAngle),
-                                                           self.rigidBody.acceleration[0] * math.sin(floorToGlobalAngle) + self.rigidBody.acceleration[1] * math.cos(floorToGlobalAngle)])
 
-                    # Swaps x and y of rotated vector
-                    swappedAcceleration = np.array([accelrationRelativeToFloor[1], accelrationRelativeToFloor[0]])
+                    # Swaps x and y of acceleration vector
+                    swappedAcceleration = np.array([self.rigidBody.acceleration[1], self.rigidBody.acceleration[0]])
+
 
                     # Projects swapped acceleration vector to surface
                     projectedNormalForce = (np.dot(swappedAcceleration, perpendicularVector) / np.linalg.norm(perpendicularVector) ** 2) * perpendicularVector
@@ -185,15 +182,13 @@ class Player:
                     # Creates friction vector from projected vector
                     frictionVector = -self.collider.autoCollisionsDetected[i].rigidBody.coefficientOfFriction * self.rigidBody.mass * projectedNormalForce
 
-                    print("Velocity:                               {}".format(self.rigidBody.velocity))
+                    print("Old velocity:                           {}".format(self.rigidBody.velocity))
                     print("Velocity to floor angle:                {}".format(velocityFloorAngle))
-                    print("Floor to global angle:                  {}".format(floorToGlobalAngle))
-                    print("Projected Vector:                       {}".format((np.dot(accelrationRelativeToFloor, perpendicularVector) / np.linalg.norm(perpendicularVector) ** 2) * perpendicularVector))
                     print("Acceleration:                           {}".format(self.rigidBody.acceleration))
-                    print("Acceleration relative to floor:         {}".format(accelrationRelativeToFloor))
-                    print("Swapped Acceleration relative to floor: {}".format(swappedAcceleration))
+                    print("Swapped Acceleration:                   {}".format(swappedAcceleration))
+                    print("Projected Vector:                       {}".format((np.dot(swappedAcceleration, perpendicularVector) / np.linalg.norm(perpendicularVector) ** 2) * perpendicularVector))
                     print("Friction vector:                        {}".format(frictionVector))
-                    print()
+                    
 
 
                     # If velocity is smaller than friction, set velocity to 0
@@ -207,7 +202,9 @@ class Player:
                     else:
                         self.rigidBody.velocity[1] = 0
 
-
+                    print("delta friction vector:                  {}".format(frictionVector * deltaTime))
+                    print("new Velocity:                           {}".format(self.rigidBody.velocity))
+                    print()
 
 
 
