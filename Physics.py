@@ -13,6 +13,7 @@ class RigidBody:
 		self.velocity = np.array([0.0, 0.0])
 		self.previousVelocity = self.velocity
 		self.acceleration = np.array([0.0, 0.0])
+		self.coefficientOfFriction = 0.4
 		self.mass = mass
 		self.drag = drag
 		
@@ -22,6 +23,7 @@ class RigidBodyStatic:
 		self.position = position
 		self.velocity = np.array([0.0, 0.0])
 		self.acceleration = np.array([0.0, 0.0])
+		self.coefficientOfFriction = 0.4
 
 class CollisionDetails:
 	def __init__(self, collides, collisionDistance, collisionPointObject1, collisionPointObject2, reactionVectorObject1, reactionVectorObject2):

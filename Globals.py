@@ -11,6 +11,9 @@ def init():
     global PARTICLE_EVENT
     global tagValues
     global camera
+    global frameRate
+
+    frameRate = 300
 
     objects = []
     gameObjects = []

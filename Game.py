@@ -28,7 +28,7 @@ pygame.display.set_caption('Physics based platformer')
 clock = pygame.time.Clock()
 
 
-player = Player("Player", np.array([[-20, 20], [0, -20], [20, 20]]), Colors.green, np.array([0.0, 0.0]), "arrows", 9, np.array([0.05, 0]), Collider.Tag.PLAYER, 350, 150)
+player = Player("Player", np.array([[-20, 20], [0, -20], [20, 20]]), Colors.green, np.array([0.0, 0.0]), "arrows", 10.0, np.array([0.05, 0]), Collider.Tag.PLAYER, 350, 150)
 
 Globals.gameObjects.append(player)
 Globals.objects.append(player)
@@ -62,7 +62,6 @@ def update(deltaTime):
     for obj in Globals.gameObjects:
         if obj == player:
             obj.movement(deltaTime)
-
 
     # Auto collision detection
     if True:    # Auto collision on
@@ -103,11 +102,11 @@ def gameLoop():
  
         player.input(pygame.event.get(), pygame.mouse.get_pos())
         
-        deltaTime = time / 1000.0    
-        
+        deltaTime = time / 1000.0
+
         update(deltaTime)
 
-        time = clock.tick(30)
+        time = clock.tick(Globals.frameRate)
 
         draw()
     
