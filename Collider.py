@@ -1,12 +1,10 @@
-import math
-import random
 import enum
 
 import numpy as np
 
-import Physics
 import Entities
 import Globals
+import Physics
 
 class Tag(enum.Enum):
     BARRIER           = 1
@@ -119,10 +117,17 @@ class Polygon:
 
             reactionVector = self.autoCollisionsDetails[i].reactionVectorObject1 / np.linalg.norm(self.autoCollisionsDetails[i].reactionVectorObject1)
 
-            self.rigidBody.velocity = self.rigidBody.velocity - 1 * (np.dot(self.rigidBody.velocity, reactionVector)) * reactionVector
+            
+            self.rigidBody.position += self.autoCollisionsDetails[i].reactionVectorObject1
 
-            self.rigidBody.position += self.autoCollisionsDetails[i].reactionVectorObject1 
+            if other.rigidBody.type == "static":
+                self.rigidBody.velocity = self.rigidBody.velocity - 1 * (np.dot(self.rigidBody.velocity, reactionVector)) * reactionVector
 
+            elif other.rigidBody.type == "dynamic":            
+                self.rigidBody.velocity = (((self.rigidBody.mass * self.rigidBody.previousVelocity) + 
+                                            (other.rigidBody.mass * other.rigidBody.previousVelocity) + 
+                                            (other.rigidBody.mass * 0.8 * (other.rigidBody.previousVelocity - self.rigidBody.previousVelocity))) / 
+                                            (self.rigidBody.mass + other.rigidBody.mass))
 
 class Circle:
     def __init__(self, rigidBody, radius, tag):
@@ -160,36 +165,36 @@ class Circle:
     def reactToCollisions(self, other, deltaTime):
         for i in range (0, self.noCollisionsDetected):
             Globals.objects.append(Entities.SpriteCircle(self.rigidBody.position[0] + self.autoCollisionsDetails[i].collisionPointObject1[0], 
-                                                         self.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject1[1], 5, (60, 60, 255)))
+                                                         self.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject1[1],
+                                                         5, Physics.Materials.METAL, (60, 60, 255)))
 
             Globals.objects.append(Entities.SpriteLine(self.rigidBody.position[0] + self.autoCollisionsDetails[i].collisionPointObject1[0],
                                                        self.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject1[1],
                                                        self.rigidBody.position[0] + self.autoCollisionsDetails[i].collisionPointObject1[0] + self.autoCollisionsDetails[i].reactionVectorObject1[0], 
-                                                       self.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject1[1] + self.autoCollisionsDetails[i].reactionVectorObject1[1], (200, 30, 30)))
+                                                       self.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject1[1] + self.autoCollisionsDetails[i].reactionVectorObject1[1], 
+                                                       Physics.Materials.METAL, (200, 30, 30)))
 
 
             Globals.objects.append(Entities.SpriteCircle(other.rigidBody.position[0] + self.autoCollisionsDetails[i].collisionPointObject2[0], 
-                                                         other.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject2[1], 5, (60, 60, 255)))
+                                                         other.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject2[1], 
+                                                         5, Physics.Materials.METAL, (60, 60, 255)))
 
             Globals.objects.append(Entities.SpriteLine(other.rigidBody.position[0] + self.autoCollisionsDetails[i].collisionPointObject2[0],
                                                        other.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject2[1],
                                                        other.rigidBody.position[0] + self.autoCollisionsDetails[i].collisionPointObject2[0] + self.autoCollisionsDetails[i].reactionVectorObject2[0], 
-                                                       other.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject2[1] + self.autoCollisionsDetails[i].reactionVectorObject2[1], (200, 30, 30)))
+                                                       other.rigidBody.position[1] + self.autoCollisionsDetails[i].collisionPointObject2[1] + self.autoCollisionsDetails[i].reactionVectorObject2[1], 
+                                                       Physics.Materials.METAL, (200, 30, 30)))
 
             reactionVector = self.autoCollisionsDetails[i].reactionVectorObject1 / np.linalg.norm(self.autoCollisionsDetails[i].reactionVectorObject1)
 
-            if np.linalg.norm(self.rigidBody.velocity) != 0:
-                velocityVector = self.rigidBody.velocity / np.linalg.norm(self.rigidBody.velocity)
             
             self.rigidBody.position += self.autoCollisionsDetails[i].reactionVectorObject1
 
-            
-
             if other.rigidBody.type == "static":
                 self.rigidBody.velocity = self.rigidBody.velocity - 1.5 * (np.dot(self.rigidBody.velocity, reactionVector)) * reactionVector
-            elif other.rigidBody.type == "dynamic":
-                # self.rigidBody.velocity = (self.rigidBody.previousVelocity * (self.rigidBody.mass - other.rigidBody.mass) + (2 * other.rigidBody.mass * other.rigidBody.previousVelocity)) / (self.rigidBody.mass + other.rigidBody.mass)
-            
+
+
+            elif other.rigidBody.type == "dynamic":            
                 self.rigidBody.velocity = (((self.rigidBody.mass * self.rigidBody.previousVelocity) + 
                                             (other.rigidBody.mass * other.rigidBody.previousVelocity) + 
                                             (other.rigidBody.mass * 0.8 * (other.rigidBody.previousVelocity - self.rigidBody.previousVelocity))) / 

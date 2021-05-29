@@ -1,29 +1,38 @@
 import numpy as np
 import math
+import enum
 
 import Entities
 import Globals
 import Collider
 
+class Materials(enum.Enum):
+	PLAYER = 1,
+	METAL  = 2,
+	ICE    = 3,
+	GLUE   = 4,
+
 
 class RigidBody:
-	def __init__(self, position, mass, drag):
+	def __init__(self, position, material, mass, drag):
 		self.type = "dynamic"
 		self.position = position
 		self.velocity = np.array([0.0, 0.0])
 		self.previousVelocity = self.velocity
 		self.acceleration = np.array([0.0, 0.0])
-		self.coefficientOfFriction = 0.4
+		self.material = material
 		self.mass = mass
 		self.drag = drag
 		
+
 class RigidBodyStatic:
-	def __init__(self, position):
+	def __init__(self, position, material):
 		self.type = "static"
 		self.position = position
 		self.velocity = np.array([0.0, 0.0])
 		self.acceleration = np.array([0.0, 0.0])
-		self.coefficientOfFriction = 0.4
+		self.material = material
+
 
 class CollisionDetails:
 	def __init__(self, collides, collisionDistance, collisionPointObject1, collisionPointObject2, reactionVectorObject1, reactionVectorObject2):
@@ -69,10 +78,13 @@ class ShapeCastDetails:
 
 
 def rayCast(position, direction, maxDistance, player):
-	direction = direction / np.linalg.norm(direction)
+
+	if np.linalg.norm(direction) != 0:
+		direction = direction / np.linalg.norm(direction)
 
 	#Debug
-	Globals.objects.append(Entities.SpriteLine(position[0], position[1], position[0] + direction[0] * maxDistance, position[1] + direction[1] * maxDistance, (200, 0, 0)))
+	Globals.objects.append(Entities.SpriteLine(position[0], position[1], position[0] + direction[0] * maxDistance, position[1] + direction[1] * maxDistance, 
+										       Materials.METAL, (200, 0, 0)))
 	
 	targets = []
 	collisionPoints = []
@@ -320,11 +332,14 @@ def circleCast(position, direction, maxDistance, radius, player):
 	collider = Entities.CollisionCircle(position[0], position[1], radius)
 
 	#Debug
-	Globals.objects.append(Entities.SpriteCircle("circle cast", collider.rigidBody.position[0], collider.rigidBody.position[1], radius, (200, 0, 0)))
+	Globals.objects.append(Entities.SpriteCircle("circle cast", collider.rigidBody.position[0], collider.rigidBody.position[1], radius, 
+	Materials.METAL, (200, 0, 0)))
 
 	while(not toReturn.collides and math.hypot(position[0] - collider.rigidBody.position[0], position[1] - collider.rigidBody.position[1]) <= maxDistance):
 		collider.rigidBody.position += direction
-		Globals.objects.append(Entities.SpriteCircle("circle cast", collider.rigidBody.position[0], collider.rigidBody.position[1], radius, (200, 0, 0)))
+		Globals.objects.append(Entities.SpriteCircle("circle cast", collider.rigidBody.position[0], collider.rigidBody.position[1], radius, 
+							   Materials.METAL, (200, 0, 0)))
+
 		for obj in Globals.gameObjects:
 			if obj != player:
 				collisionDetails = objectsCollide(collider, obj)
@@ -343,10 +358,11 @@ def PolyCast(position, direction, points, maxDistance, player):
 
 	toReturn = ShapeCastDetails(False, np.array([0, 0]))
 	collisionDetails = CollisionDetails(False, 0, np.array([0.0, 0.0]), np.array([0.0, 0.0]), np.array([0.0, 0.0]), np.array([0.0, 0.0]))
-	collider = Entities.CollisionPoly(np.array([position[0], position[1]]), points, Collider.Tag.BARRIER)
+	collider = Entities.CollisionPoly(np.array([position[0], position[1]]), points, Materials.METAL, Collider.Tag.BARRIER)
 
 	while(not toReturn.collides and math.hypot(position[0] - collider.rigidBody.position[0], position[1] - collider.rigidBody.position[1]) <= maxDistance):
-		Globals.objects.append(Entities.SpritePoly(collider.rigidBody.position, points, (200, 0, 0)))
+		Globals.objects.append(Entities.SpritePoly(collider.rigidBody.position, points, Materials.METAL, (200, 0, 0)))
+
 		for obj in Globals.gameObjects:
 			if obj != player:
 				collisionDetails = objectsCollide(collider, obj)

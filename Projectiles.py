@@ -6,7 +6,7 @@ import numpy as np
 import Globals
 import Entities
 import Collider
-
+import Physics
 
 class ProjectilePriciple:
     def __init__(self):
@@ -16,11 +16,11 @@ class ProjectilePriciple:
         if self.projectiles:
             self.deleteProjectile()
             for projectile in self.projectiles:
-                projectile.base.rigidBody.position += projectile.base.rigidBody.velocity * deltaTime
+                projectile.base.movement(deltaTime)
 
 
     def addProjectile(self, x, y, direction, speed):
-        projectile = Projectile(np.array([x, y]), direction, speed, 5, (random.uniform(255, 255), random.uniform(255, 255), random.uniform(255, 255)))
+        projectile = Projectile(np.array([x, y]), direction, speed, 10, (random.uniform(255, 255), random.uniform(255, 255), random.uniform(255, 255)))
         self.projectiles.append(projectile)
         Globals.objects.append(projectile.base)
         Globals.gameObjects.append(projectile.base)
@@ -40,7 +40,7 @@ class Projectile:
         self.shape = "circle"
         self.temp = False
         # self.base = Entities.DynamicPoly()
-        self.base = Entities.DynamicCircle("Bullet", position, radius, color, 10, np.array([0.005, 0.005]), Collider.Tag.PLAYER_PROJECTILE)
+        self.base = Entities.DynamicCircle("Bullet", position, radius, Physics.Materials.METAL, color, 10, np.array([0.005, 0.005]), Collider.Tag.PLAYER_PROJECTILE)
         direction /= np.linalg.norm(direction)
         self.direction = direction / np.linalg.norm(direction)
         self.speed = speed

@@ -24,7 +24,7 @@ class InputVariables():
         return self.right - self.left
 
 class Player:
-    def __init__(self, name, points, color, position, controls, mass, drag, tags, jumpForce, dashCooldownTime):
+    def __init__(self, name, points, color, position, controls, material, mass, drag, tags, jumpForce, dashCooldownTime):
         self.name = name
         self.shape = "poly"
         self.temp = False
@@ -32,7 +32,7 @@ class Player:
         # self.sprite = Sprite.Circle(30, color)
         # self.collider = Collider.Circle(self.rigidBody, 30, tags)
 
-        self.rigidBody = Physics.RigidBody(position, mass, drag)
+        self.rigidBody = Physics.RigidBody(position, material, mass, drag)
         self.sprite = Sprite.Polygon(points, color)
         self.collider = Collider.Polygon(self.rigidBody, points, tags)
         self.direction = np.array([0.0, 0.0])
@@ -52,7 +52,7 @@ class Player:
     
 
     def input(self, events, mousePos):
-        self.mouseX, self.mouseY = mousePos + Globals.camera.rigidBody.position
+        self.mouseX, self.mouseY = (mousePos + Globals.camera.rigidBody.position) / Globals.camera.scale
 
         for event in events:
             if event.type == pygame.QUIT:
@@ -78,26 +78,31 @@ class Player:
                     self.dashing = False
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.projectiles.addProjectile(self.rigidBody.position[0], self.rigidBody.position[1], np.array([-self.rigidBody.position[0] + self.mouseX, -self.rigidBody.position[1] + self.mouseY]), 500.0)
+                if event.button == 1:
+                    self.projectiles.addProjectile(self.rigidBody.position[0], self.rigidBody.position[1], np.array([-self.rigidBody.position[0] + self.mouseX, -self.rigidBody.position[1] + self.mouseY]), 500.0)
+                elif event.button == 4:
+                    Globals.camera.updateScale(Globals.camera.scale + 0.1)
+
+                elif event.button == 5:
+                   Globals.camera.updateScale(Globals.camera.scale - 0.1)
 
     
     def movement(self, deltaTime):
         gravity = 800
-        force = 4000
+        force = 1000
 
         # Jumping
         if self.direction[1] < 0:
-            if self.grounded:
-                self.grounded = False
-                self.wallGrounded = False
-                self.rigidBody.velocity[1] += -self.jumpForce
-
-            elif self.wallGrounded and self.direction[0] != 0:
+            if self.wallGrounded and self.direction[0] != 0:
                 self.grounded = False
                 self.wallGrounded = False
                 self.rigidBody.velocity[1] += -math.sqrt((self.jumpForce ** 2) / 2)
                 self.rigidBody.velocity[0] = self.direction[0] * -math.sqrt((self.jumpForce ** 2) / 2)
 
+            elif self.grounded:
+                self.grounded = False
+                self.wallGrounded = False
+                self.rigidBody.velocity[1] += -self.jumpForce
 
             self.direction[1] = 0
 
@@ -112,11 +117,11 @@ class Player:
             if self.dashing:
                 self.dashCooldownCurrent = self.dashCooldownTime
                 self.dashing = False
-                self.rigidBody.velocity[0] += 1000 * self.direction[0]
+                self.rigidBody.velocity[0] += 500 * self.direction[0]
 
         else:
             # If not grounded reduce control
-            self.rigidBody.acceleration[0] = self.direction[0] * force * 0.2
+            self.rigidBody.acceleration[0] = self.direction[0] * force * 0.4
 
         # Add gravitational acceleration
         self.rigidBody.acceleration[1] = gravity
@@ -125,12 +130,9 @@ class Player:
         self.rigidBody.velocity += self.rigidBody.acceleration * deltaTime
         
 
-        
-
         # Friction
         if(self.collider.noCollisionsDetected > 0):
             for i in range (0, self.collider.noCollisionsDetected):
-                
                 
                 # Direciton object collides with surface
                 reactionVector = self.collider.autoCollisionsDetails[i].reactionVectorObject2
@@ -142,7 +144,6 @@ class Player:
                 # Angle between velocity and surface
                 velocityFloorAngle = math.atan2(reactionVector[0] * self.rigidBody.velocity[1] - reactionVector[1] * self.rigidBody.velocity[0],
                               reactionVector[0] * self.rigidBody.velocity[0] + reactionVector[1] * self.rigidBody.velocity[1])
-                              
 
                 # Checks if angle of velocity is between normal force vector angle +/- 90 degrees
                 if (angle1 < math.atan2(self.rigidBody.velocity[1], self.rigidBody.velocity[0]) - 2 * math.pi < angle2 or
@@ -168,7 +169,7 @@ class Player:
                     # Projects swapped acceleration vector to surface
                     projectedNormalForce = (np.dot(swappedAcceleration, perpendicularVector) / np.linalg.norm(perpendicularVector) ** 2) * perpendicularVector
 
-                    # Sets direciton of projected vector to opposite of velocity
+                    # Sets direciton of projected vector to velocity
                     if self.rigidBody.velocity[0] < 0:
                         projectedNormalForce[0] = -abs(projectedNormalForce[0])
                     else:
@@ -179,17 +180,11 @@ class Player:
                     else:
                         projectedNormalForce[1] = abs(projectedNormalForce[1])
 
+                    coefficientOfFriction = Globals.friction_Coefficients[self.collider.autoCollisionsDetected[i].rigidBody.material, 
+                                                                          self.collider.autoCollisionsDetected[i].collider.autoCollisionsDetected[i].rigidBody.material]
+
                     # Creates friction vector from projected vector
-                    frictionVector = -self.collider.autoCollisionsDetected[i].rigidBody.coefficientOfFriction * self.rigidBody.mass * projectedNormalForce
-
-                    print("Old velocity:                           {}".format(self.rigidBody.velocity))
-                    print("Velocity to floor angle:                {}".format(velocityFloorAngle))
-                    print("Acceleration:                           {}".format(self.rigidBody.acceleration))
-                    print("Swapped Acceleration:                   {}".format(swappedAcceleration))
-                    print("Projected Vector:                       {}".format((np.dot(swappedAcceleration, perpendicularVector) / np.linalg.norm(perpendicularVector) ** 2) * perpendicularVector))
-                    print("Friction vector:                        {}".format(frictionVector))
-                    
-
+                    frictionVector = -coefficientOfFriction * projectedNormalForce
 
                     # If velocity is smaller than friction, set velocity to 0
                     if abs(self.rigidBody.velocity[0]) > abs(frictionVector[0]) * deltaTime:
@@ -201,10 +196,6 @@ class Player:
                         self.rigidBody.velocity[1] = self.rigidBody.velocity[1] + frictionVector[1] * deltaTime
                     else:
                         self.rigidBody.velocity[1] = 0
-
-                    print("delta friction vector:                  {}".format(frictionVector * deltaTime))
-                    print("new Velocity:                           {}".format(self.rigidBody.velocity))
-                    print()
 
 
 
@@ -227,11 +218,14 @@ class Player:
 
         aim = Physics.rayCast(self.rigidBody.position, np.array([-self.rigidBody.position[0] + self.mouseX, -self.rigidBody.position[1] + self.mouseY]), 200, self)
 
-        groundCheck = Physics.PolyCast(self.rigidBody.position + np.array([0, self.collider.mostDownPoint()[1] + 2]), 
-                                       np.array([0, 1]), np.array([[-19, -0.5], [19, -0.5], [19, 0.5], [-19, 0.5]]), 1, self)
+        groundCheck = Physics.PolyCast(self.rigidBody.position + np.array([0, self.collider.mostDownPoint()[1]]), 
+                                       np.array([0, 1]), np.array([[-20, -0.5], [20, -0.5], [20, 0.5], [-20, 0.5]]), 1, self)
 
-        wallCheckLeft =  Physics.rayCast(self.rigidBody.position + np.array([self.collider.mostLeftPoint()[0], 0]), np.array([-1, 0]), 24, self)
-        wallCheckRight = Physics.rayCast(self.rigidBody.position + np.array([self.collider.mostRightPoint()[0], 0]), np.array([1, 0]), 24, self)
+        wallCheckLeft =  Physics.rayCast(self.rigidBody.position + np.array([self.collider.mostLeftPoint()[0], 
+                                         self.collider.mostDownPoint()[1] - 2]), np.array([-1, 0]), 4, self)
+
+        wallCheckRight = Physics.rayCast(self.rigidBody.position + np.array([self.collider.mostRightPoint()[0], 
+                                         self.collider.mostDownPoint()[1] - 2]), np.array([1, 0]), 4, self)
 
         # groundCheck = Physics.PolyCast(self.rigidBody.position + np.array([0, self.collider.radius + 2]), 
         #                                np.array([0, 1]), np.array([[-19, -0.5], [19, -0.5], [19, 0.5], [-19, 0.5]]), 1, self)
@@ -240,10 +234,10 @@ class Player:
         # wallCheckRight = Physics.rayCast(self.rigidBody.position + np.array([0, self.collider.radius]), np.array([1, 0]), 24, self)
 
         
-        Globals.objects.append(Entities.SpriteCircle(self.mouseX, self.mouseY, 5, (200, 200, 200)))
+        Globals.objects.append(Entities.SpriteCircle(self.mouseX, self.mouseY, 5, Physics.Materials.METAL, (200, 200, 200)))
 
         if aim.collides:
-            Globals.objects.append(Entities.SpriteCircle(aim.intercept[0], aim.intercept[1], 5, (0, 0, 255)))
+            Globals.objects.append(Entities.SpriteCircle(aim.intercept[0], aim.intercept[1], 5, Physics.Materials.METAL, (0, 0, 255)))
         
         # Check if able to jump
         if groundCheck.collides:
@@ -251,7 +245,7 @@ class Player:
         else: 
             self.grounded = False
 
-        if (wallCheckLeft.collides or wallCheckRight.collides) and not self.grounded:
+        if wallCheckLeft.collides or wallCheckRight.collides:
             self.wallGrounded = True
         else:
             self.wallGrounded = False
