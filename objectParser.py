@@ -1,8 +1,23 @@
 import numpy as np
 
+def parseFloatArray(string):
+    return np.array([float(i) for i in string.strip('][').split(', ')])
+
+def parseColor(string):
+    return eval(string)
+
+
+def parseArrayOfFloatArrays(string):
+    arrays = []
+    for subString in string:
+            arrays.append([float(i) for i in subString.split(", ")])
+
+    return arrays
+
 
 def parseData(data):
     object = []
+
 
     try:
         objectItems = data.split(":")
@@ -12,8 +27,8 @@ def parseData(data):
         points = []
 
         for string in pointStrings:
-            point = string.split(", ")
-            points.append([float(i) for i in point])
+            points.append([float(i) for i in string.split(", ")])
+
 
         color = eval(objectItems[3])
 
@@ -26,11 +41,25 @@ def parseData(data):
     return object
 
 
-def parseList(data):
-    objects = []
+def parseClientData(data):
+    object = []
 
-    print("PARSE:")
-    print("data: {}".format(data))
+    try:
+        objectItems = data.split(":")
+
+        object = [int(objectItems[0]), 
+                  np.array([float(i) for i in objectItems[1].strip('][').split(', ')]), 
+                  np.array([float(i) for i in objectItems[2].strip('][').split(', ')]), 
+                  bool(int(objectItems[3]))]
+
+    except:
+        print("Failed to parse.")
+
+    return object
+
+
+def parseObject(data):
+    objects = []
     
     if "|" not in data:
         print("empty")
@@ -43,12 +72,9 @@ def parseList(data):
         for object in datalist:
             objects.append(parseData(object))
             
-        print("objects: {}".format(objects))
 
     except:
         print("Failed to parse.")
 
-
-    print()
 
     return objects

@@ -45,17 +45,6 @@ class Client:
             # Send Network Stuff
             self.playerObjects = self.send_data(clientPlayer)
 
-
-            print("RUN:")
-            print(self.playerObjects)
-            print(len(self.playerObjects))
-            print()
-
-            for player in self.playerObjects:
-                print(player)
-
-            print()
-
             self.camera.updatePosition(self.playerObjects[int(self.net.id)][1][0], self.playerObjects[int(self.net.id)][1][1])
 
             # Draw objects
@@ -78,14 +67,12 @@ class Client:
     def send_data(self, player):
         """Send position to server :return: None"""
 
-        data = "{}:{}:{}:{}".format(self.net.id, player.direction.tolist(), player.collider.points.tolist(), player.sprite.color)
+        data = "{}:{}:{}:{}".format(self.net.id, player.direction.tolist(), [player.mouseX, player.mouseY], int(player.primaryFire))
 
-        print("Data to send: {}".format(data))
-        print()
 
-        reply = objectParser.parseList(self.net.send(data))
 
-        print("parsed data: {}".format(reply))
+        reply = objectParser.parseObject(self.net.send(data))
+
 
 
         return reply

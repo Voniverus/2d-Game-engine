@@ -55,6 +55,8 @@ def init():
                                                   Collider.Tag.PLAYER_PROJECTILE)}
 
     friction_Coefficients = {}
+    friction_Coefficients[Physics.Materials.PLAYER, Physics.Materials.PLAYER] = 0.4 
+    
     friction_Coefficients[Physics.Materials.PLAYER, Physics.Materials.METAL]  = 0.4 
     friction_Coefficients[Physics.Materials.PLAYER, Physics.Materials.ICE]    = 0.01
     friction_Coefficients[Physics.Materials.PLAYER, Physics.Materials.GLUE]   = 0.99

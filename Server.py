@@ -40,9 +40,9 @@ running = False
 
 currentId = 0
 Globals.init()
-gameObjects = []
+Globals.gameObjects = []
 playerObjects = []
-gameObjects.extend(Spawner.init())
+Globals.gameObjects.extend(Spawner.init())
 
 
 def run():
@@ -53,7 +53,7 @@ def run():
 
         deltaTime = time / 1000.0
 
-        Game.update(gameObjects, playerObjects, deltaTime)
+        Game.update(Globals.gameObjects, playerObjects, deltaTime)
         
         time = clock.tick(Globals.frameRate)
 
@@ -69,7 +69,7 @@ def threaded_client(connection):
 
     player = Spawner.createPlayer()
 
-    gameObjects.append(player)
+    Globals.gameObjects.append(player)
     playerObjects.append(player)
 
 
@@ -84,14 +84,25 @@ def threaded_client(connection):
                 break
 
             else:
-                print("Recieved: " + reply)
+                # print("Recieved: " + reply)
 
-                object = objectParser.parseData(reply)
+                object = objectParser.parseClientData(reply)
 
                 id = int(object[0])
 
-            
+
                 playerObjects[id].direction = np.array(object[1])
+
+                playerObjects[id].mouseX = object[1][0]
+                playerObjects[id].mouseY = object[1][1]
+
+
+                if object[3]:
+                    playerObjects[id].projectiles.addProjectile(playerObjects[id].rigidBody.position[0], 
+                                                            playerObjects[id].rigidBody.position[1], 
+                                                            np.array([-playerObjects[id].rigidBody.position[0] + playerObjects[id].mouseX,
+                                                                      -playerObjects[id].rigidBody.position[1] + playerObjects[id].mouseY]), 500.0)
+
 
 
                 reply = ""
@@ -100,8 +111,9 @@ def threaded_client(connection):
                     reply += "{}:{}:{}:{}|".format(id, player.rigidBody.position.tolist(), player.collider.points.tolist(), player.sprite.color)
 
 
-                print("Sending:  " + reply)
+                # print("Sending:  " + reply)
 
+            
 
             connection.sendall(str.encode(reply))
 

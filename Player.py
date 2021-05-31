@@ -41,10 +41,14 @@ class Player:
         self.dashCooldownTime = dashCooldownTime
         self.dashCooldownCurrent = 0
         self.grounded = False
-        self.playerGrounded = False
+        self.jumps = 0
+        self.groundCheck = False
+        self.wallGrounded = False
+        self.wallJumps = 0
         self.wallGrounded = False
         self.controls = controls
         self.inputs = InputVariables
+        self.primaryFire = False
         self.mouseX = 0
         self.mouseY = 0
         self.particles = Particles.ParticlePriciple()
@@ -79,6 +83,7 @@ class Player:
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
+                    self.primaryFire = True
                     self.projectiles.addProjectile(self.rigidBody.position[0], self.rigidBody.position[1], np.array([-self.rigidBody.position[0] + self.mouseX, -self.rigidBody.position[1] + self.mouseY]), 500.0)
                 elif event.button == 4:
                     Globals.camera.updateScale(Globals.camera.scale + 0.1)
@@ -86,23 +91,45 @@ class Player:
                 elif event.button == 5:
                    Globals.camera.updateScale(Globals.camera.scale - 0.1)
 
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    self.primaryFire = False
+
     
     def movement(self, deltaTime):
         gravity = 800
         force = 1000
 
+
+        if self.wallGrounded:
+            self.groundCheck = False
+            if self.wallCheck:
+                self.wallJumps = 1
+                self.wallCheck = False
+        else:
+            self.wallCheck = True
+
+
+
+        if self.grounded:
+            if self.groundCheck:
+                self.jumps = 1
+                self.groundCheck = False
+        else:
+            self.groundCheck = True
+    
+
+
         # Jumping
         if self.direction[1] < 0:
-            if self.wallGrounded and self.direction[0] != 0:
-                self.grounded = False
-                self.wallGrounded = False
+            if self.wallJumps > 0 and self.direction[0] != 0:
+                self.wallJumps -= 1
                 self.rigidBody.velocity[1] += -math.sqrt((self.jumpForce ** 2) / 2)
                 self.rigidBody.velocity[0] = self.direction[0] * -math.sqrt((self.jumpForce ** 2) / 2)
 
-            elif self.grounded:
-                self.grounded = False
-                self.wallGrounded = False
-                self.rigidBody.velocity[1] += -self.jumpForce
+            elif self.jumps > 0:
+                self.jumps -= 1
+                self.rigidBody.velocity[1] = -self.jumpForce if self.rigidBody.velocity[1] > 0 else self.rigidBody.velocity[1] - self.jumpForce
 
             self.direction[1] = 0
 
@@ -239,6 +266,8 @@ class Player:
         if aim.collides:
             Globals.objects.append(Entities.SpriteCircle(aim.intercept[0], aim.intercept[1], 5, Physics.Materials.METAL, (0, 0, 255)))
         
+
+
         # Check if able to jump
         if groundCheck.collides:
             self.grounded = True

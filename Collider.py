@@ -194,7 +194,10 @@ class Circle:
                 self.rigidBody.velocity = self.rigidBody.velocity - 1.5 * (np.dot(self.rigidBody.velocity, reactionVector)) * reactionVector
 
 
-            elif other.rigidBody.type == "dynamic":            
+            elif other.rigidBody.type == "dynamic":   
+                print("A")
+
+
                 self.rigidBody.velocity = (((self.rigidBody.mass * self.rigidBody.previousVelocity) + 
                                             (other.rigidBody.mass * other.rigidBody.previousVelocity) + 
                                             (other.rigidBody.mass * 0.8 * (other.rigidBody.previousVelocity - self.rigidBody.previousVelocity))) / 
